@@ -11,12 +11,10 @@ const UserSchema = new mongoose.Schema({
     validate: [validator.isAlphanumeric, "it's invalid id. input only alphanumeric"],
     minLength: [1, "too short length id"],
     maxLength: [30, "too long length id"],
-    required: [true, "admin_id is required"],
     index: true,
   },
   admin_password: {
     type: String,
-    required: [true, "admin_password is required"],
   },
   email: {
     type: String,
@@ -36,26 +34,20 @@ const UserSchema = new mongoose.Schema({
   access_time: {
     type: Number,
     default: 0,
-    validate: {
-      validator: (value) => {
-        if (0 <= value && value < Number.MAX_SAFE_INTEGER) {
-          return true;
-        }
-      },
-      message: "Exceeded max safe integer",
+    min: 0,
+    max: Number.MAX_SAFE_INTEGER,
+  },
+  character: {
+    type: String,
+    enum: {
+      values: ["brownShiba, darkShiba, grayShiba"],
+      message: "{VALUE} is not supported",
     },
-    character: {
-      type: String,
-      enum: {
-        values: ["brownShiba, darkShiba, grayShiba"],
-        message: "{VALUE} is not supported",
-      },
-      required: [true, "character is required"],
-    },
-    isAdministrator: {
+    required: [true, "character is required"],
+  },
+  isAdministrator: {
       type: Boolean,
       default: false,
-    }
   },
 }, SCHEMA_TIMESTAMPS_OPTION);
 
