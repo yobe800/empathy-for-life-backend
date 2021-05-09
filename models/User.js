@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 
+const { USER_CHARACTERS } = require("../constants/constants");
 const { SCHEMA_TIMESTAMPS_OPTION } = require("../constants/constants");
 
 const UserSchema = new mongoose.Schema({
@@ -20,6 +21,7 @@ const UserSchema = new mongoose.Schema({
     type: String,
     validate: [validator.isEmail, "input a valid email"],
     required: [true, "email is required"],
+    index: true,
   },
   uids: [
     {
@@ -29,6 +31,9 @@ const UserSchema = new mongoose.Schema({
   ],
   user_name: {
     type: String,
+    trim: true,
+    minLength: [1, "too short user name"],
+    maxLength: [20, "too long user name"],
     required: [true, "user_name is required"],
   },
   access_time: {
@@ -40,7 +45,7 @@ const UserSchema = new mongoose.Schema({
   character: {
     type: String,
     enum: {
-      values: ["brownShiba, darkShiba, grayShiba"],
+      values: USER_CHARACTERS,
       message: "{VALUE} is not supported",
     },
     required: [true, "character is required"],
