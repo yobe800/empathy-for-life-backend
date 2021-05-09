@@ -50,7 +50,7 @@ const UserSchema = new mongoose.Schema({
     },
     required: [true, "character is required"],
   },
-  isAdministrator: {
+  is_administrator: {
       type: Boolean,
       default: false,
   },

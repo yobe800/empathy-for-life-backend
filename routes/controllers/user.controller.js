@@ -4,7 +4,7 @@ const User = require("../../models/User");
 
 const { authenticateUser } = require("../../auth/firebase");
 const getToken = require("../../utils/getToken");
-const logErrorInDevelopment = require("../../utils/logErrorInDevelopment");
+const generateIdToken = require("../../utils/generateIdToken");
 const getRandomUserCharactor = require("../../utils/getRandomUserCharactor");
 
 const signInUser = async (req, res, next) => {
@@ -17,21 +17,34 @@ const signInUser = async (req, res, next) => {
     }
 
     const { name, email, uid } = await authenticateUser(googleIdToken);
+    let user;
 
-    const user = await User.findOne({ email });
-
-    if (user) {
-      await user.updateOne({ $addToSet: { uids: uid }}, { new: true, lean: true });
-
-      return res.json(user);
+    if (await User.exists({ email })) {
+      user = await User.findOneAndUpdate(
+        { email },
+        { $addToSet: { uids: uid } },
+        { runValidators: true, new: true, lean: true }
+      );
+    } else {
+      user = await User.create({user_name: name,
+        email,
+        uids: [uid],
+        character: getRandomUserCharactor()
+      });
     }
 
-    const newUser = await User.create([{ user_name: name, email, uids: [uid], character: getRandomUserCharactor() }], { lean: true });
+    const idToken = generateIdToken(
+      { id: user._id, isAdministrator: user.is_administrator }
+    );
+    res.cookie(
+      "empathyForLifeIdToken",
+      idToken,
+      { maxAge: 24 * 60 * 60 },
+    );
 
-    return res.json(newUser[0]);
-
+    return res.json(user);
   } catch (err) {
-    return next(createError(500, "failed to sign in user"));
+    next(createError(500, "failed to sign in user", { error: err }));
   }
 };
 

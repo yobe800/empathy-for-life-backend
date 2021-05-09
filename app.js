@@ -14,11 +14,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 const userRouter = require("./routes/user");
+const adminRouter = require("./routes/admin");
 
 app.use("/user", userRouter);
+app.use("/admin", adminRouter);
 
 app.use((err, req, res, next) => {
-  logErrorInDevelopment(err);
+  logErrorInDevelopment(err.error);
   res.status(err.status || 500);
 
   return res.json({ error: err.message });
