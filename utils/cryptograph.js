@@ -13,7 +13,7 @@ const cryptograph = (password, userSalt = null) => {
     = userSalt
       || crypto.randomBytes(Number(CRYPTO_BUFFER_BYTE)).toString(CRYPTO_ENCTYPE);
 
-  const cryptoPassword = crypto.pbkdf2Sync(
+  const encryptedPassword = crypto.pbkdf2Sync(
     password,
     salt,
     Number(CRYPTO_ITERATION),
@@ -21,7 +21,7 @@ const cryptograph = (password, userSalt = null) => {
     CRYPTO_ALGORITHM,
   ).toString(CRYPTO_TO_STRING_ENCTYPE);
 
-  return { cryptoPassword, salt };
+  return { encryptedPassword, salt };
 };
 
 module.exports = cryptograph;

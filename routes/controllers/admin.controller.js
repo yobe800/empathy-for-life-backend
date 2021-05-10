@@ -27,9 +27,9 @@ const authAdmin = async (req, res, next) => {
   }
 
   try {
-    const { cryptoPassword } = cryptograph(password, salt);
+    const { encryptedPassword } = cryptograph(password, salt);
 
-    if (storedPassword === cryptoPassword) {
+    if (storedPassword === encryptedPassword) {
       return res.json({ result: "ok" });
     }
 
@@ -56,10 +56,10 @@ const signUpAdmin = async (req, res, next) => {
     } else if (await User.exists({ admin_id: id })) {
       payload = { message: "there is same admin ID" };
     } else {
-      const { cryptoPassword, salt } = cryptograph(password);
+      const { encryptedPassword, salt } = cryptograph(password);
       const form = {
         admin_id: id,
-        admin_password: cryptoPassword,
+        admin_password: encryptedPassword,
         user_name: userName,
         email,
         is_administrator: true,
@@ -68,7 +68,7 @@ const signUpAdmin = async (req, res, next) => {
       };
 
       const {
-        admin_id,
+        _id,
         user_name,
         is_administrator,
         character,
@@ -76,23 +76,71 @@ const signUpAdmin = async (req, res, next) => {
       } = await User.create(form);
 
       payload = {
-        admin_id,
+        _id,
         user_name,
         is_administrator,
         character,
-        access_time
+        access_time,
       };
     }
 
     return res.json(payload);
   } catch (err) {
     next(
-      createError(500, "failed to sign up an admin", { error: err })
+      createError(500, "failed to sign up an admin", { error: err }),
     );
   }
 
 }
 
+const signInAdmin = async (req, res, next) => {
+  const { id, password } = req.body;
+  let payload = { message: "", result: null };
+
+  try {
+    if (await User.exists({ admin_id: id })) {
+      const projection = (
+        "access_time is_administrator admin_password user_name character salt"
+      );
+      const {
+        _id,
+        access_time,
+        is_administrator,
+        user_name,
+        character,
+        admin_password,salt } = await User.findOne(
+        { admin_id: id },
+        projection,
+        { lean: true },
+      );
+
+      const { encryptedPassword } = cryptograph(password, salt);
+
+      if (admin_password === encryptedPassword) {
+        payload.message = "ok";
+        payload.result = {
+          _id,
+          access_time,
+          is_administrator,
+          user_name,
+          character,
+        };
+      } else {
+        payload.message = "invalid password";
+      }
+    } else {
+      payload.message = "invalid id";
+    }
+
+    return res.json(payload);
+  } catch (err) {
+    next(
+      createError(500, "failed to sign in an admin"), { error: err },
+    );
+  }
+
+};
+
 exports.authAdmin = authAdmin;
 exports.signUpAdmin = signUpAdmin;
-
+exports.signInAdmin = signInAdmin;
