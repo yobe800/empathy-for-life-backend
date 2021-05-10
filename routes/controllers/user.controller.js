@@ -26,10 +26,11 @@ const signInUser = async (req, res, next) => {
         { runValidators: true, new: true, lean: true }
       );
     } else {
-      user = await User.create({user_name: name,
+      user = await User.create({
+        user_name: name,
         email,
         uids: [uid],
-        character: getRandomUserCharactor()
+        character: getRandomUserCharactor(),
       });
     }
 
@@ -44,7 +45,9 @@ const signInUser = async (req, res, next) => {
 
     return res.json(user);
   } catch (err) {
-    next(createError(500, "failed to sign in user", { error: err }));
+    next(
+      createError(500, "failed to sign in user", { error: err })
+    );
   }
 };
 

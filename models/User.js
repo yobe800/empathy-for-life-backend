@@ -54,6 +54,7 @@ const UserSchema = new mongoose.Schema({
       type: Boolean,
       default: false,
   },
+  salt: String,
 }, SCHEMA_TIMESTAMPS_OPTION);
 
 module.exports = mongoose.model("User", UserSchema);
