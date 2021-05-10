@@ -2,15 +2,20 @@ const createError = require("http-errors");
 
 const cryptograph = require("../../utils/cryptograph");
 const getRandomUserCharactor = require("../../utils/getRandomUserCharactor");
+const generateIdToken = require("../../utils/generateIdToken");
+const { ID_TOKEN_COOKIE_MAX_AGE } = require("../../constants/constants");
+
 const AdminPassword = require("../../models/AdminPassword");
 const User = require("../../models/User");
 
 const authAdmin = async (req, res, next) => {
   const { password } = req.body;
   let storedPassword, salt;
+  const payload = { message: "" };
 
   if (!password) {
-    return res.json({ result: null });
+    payload.message = "invalid password";
+    return res.json(payload);
   }
 
   try {
@@ -22,7 +27,7 @@ const authAdmin = async (req, res, next) => {
     salt = _salt;
   } catch (err) {
     return next(
-      createError(500, "Internal Server error", { error: err })
+      createError(500, "Internal Server error", { error: err }),
     );
   }
 
@@ -30,31 +35,32 @@ const authAdmin = async (req, res, next) => {
     const { encryptedPassword } = cryptograph(password, salt);
 
     if (storedPassword === encryptedPassword) {
-      return res.json({ result: "ok" });
+      payload.message = "ok";
+    } else {
+      payload.message = "invalid password";
     }
 
-    return res.json({ result: null });
+    return res.json(payload);
   } catch (err) {
-    next(createError(
-      500,
-      "failed to authenticate an admin",
-      { error: err },
-    ));
+    next(
+      createError(500, "failed to authenticate an admin", { error: err }),
+    );
   }
-}
+};
 
 const signUpAdmin = async (req, res, next) => {
   try {
-    let payload;
     const { id, password, userName, email } = req.body;
+    let payload = { message: "", result: null };
+
     const hasUndefined = Object
     .values(req.body)
     .some((value) => value === undefined);
 
     if (hasUndefined) {
-      payload = { message: "there is undefined value" };
+      payload.message = "invalid request";
     } else if (await User.exists({ admin_id: id })) {
-      payload = { message: "there is same admin ID" };
+      payload.message = "existed id";
     } else {
       const { encryptedPassword, salt } = cryptograph(password);
       const form = {
@@ -75,13 +81,23 @@ const signUpAdmin = async (req, res, next) => {
         access_time,
       } = await User.create(form);
 
-      payload = {
+      payload.message = "ok";
+      payload.result = {
         _id,
         user_name,
         is_administrator,
         character,
         access_time,
       };
+
+      const idToken = generateIdToken(
+        { id: _id },
+      );
+      res.cookie(
+        "empathyForLifeIdToken",
+        idToken,
+        { maxAge: ID_TOKEN_COOKIE_MAX_AGE },
+      );
     }
 
     return res.json(payload);
@@ -90,12 +106,11 @@ const signUpAdmin = async (req, res, next) => {
       createError(500, "failed to sign up an admin", { error: err }),
     );
   }
-
-}
+};
 
 const signInAdmin = async (req, res, next) => {
   const { id, password } = req.body;
-  let payload = { message: "", result: null };
+  const payload = { message: "", result: null };
 
   try {
     if (await User.exists({ admin_id: id })) {
@@ -125,6 +140,15 @@ const signInAdmin = async (req, res, next) => {
           user_name,
           character,
         };
+
+        const idToken = generateIdToken(
+          { id: _id, isAdministrator: is_administrator },
+        );
+        res.cookie(
+          "empathyForLifeIdToken",
+          idToken,
+          { maxAge: ID_TOKEN_COOKIE_MAX_AGE },
+        );
       } else {
         payload.message = "invalid password";
       }
@@ -135,10 +159,9 @@ const signInAdmin = async (req, res, next) => {
     return res.json(payload);
   } catch (err) {
     next(
-      createError(500, "failed to sign in an admin"), { error: err },
+      createError(500, "failed to sign in an admin", { error: err }),
     );
   }
-
 };
 
 exports.authAdmin = authAdmin;

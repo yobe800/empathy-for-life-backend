@@ -23,7 +23,7 @@ app.use((err, req, res, next) => {
   logErrorInDevelopment(err.error);
   res.status(err.status || 500);
 
-  return res.json({ error: err.message });
+  return res.json({ message: err.message });
 });
 
 module.exports = app;
