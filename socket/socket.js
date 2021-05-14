@@ -15,15 +15,23 @@ const handleSocket = () => {
     }
 
     const { userName } = socket.handshake.auth;
-    const user = { id: socket.id, name: userName };
+    const user = { id: socket.id, name: userName, createdAt: Date.now() };
     io.to(socket.id).emit("current users", users);
     users.push(user);
     io.to(socket.id).emit("current dogs", dogs);
     socket.broadcast.emit("connected user", user);
 
     socket.on("disconnect", () => {
-      users = users.filter((user) => socket.id !== user.id);
-      socket.broadcast.emit("disconnected user", socket.id);
+      let currentUser;
+      users = users.filter((user) => {
+        if (socket.id !== user.id) {
+          return true;
+        }
+
+        currentUser = user;
+      });
+      currentUser.disconnectedAt = Date.now();
+      socket.broadcast.emit("disconnected user", currentUser);
 
       if (!users.length) {
         clearInterval(updateDogsIntervalId);
@@ -32,7 +40,15 @@ const handleSocket = () => {
     socket.on(
       "chat",
       (message) => {
-        socket.broadcast.emit("chat", message);
+        const { userName } = socket.handshake.auth;
+        io.emit(
+          "chat",
+          {
+            user: { id: socket.id, name: userName },
+            message,
+            createdAt: Date.now(),
+          },
+        );
       },
     );
     socket.on(
