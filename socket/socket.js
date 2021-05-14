@@ -21,22 +21,25 @@ const handleSocket = () => {
     io.to(socket.id).emit("current dogs", dogs);
     socket.broadcast.emit("connected user", user);
 
-    socket.on("disconnect", () => {
-      let currentUser;
-      users = users.filter((user) => {
-        if (socket.id !== user.id) {
-          return true;
+    socket.on(
+      "disconnect",
+      () => {
+        let currentUser;
+        users = users.filter((user) => {
+          if (socket.id !== user.id) {
+            return true;
+          }
+
+          currentUser = user;
+        });
+        currentUser.disconnectedAt = Date.now();
+        socket.broadcast.emit("disconnected user", currentUser);
+
+        if (!users.length) {
+          clearInterval(updateDogsIntervalId);
         }
-
-        currentUser = user;
-      });
-      currentUser.disconnectedAt = Date.now();
-      socket.broadcast.emit("disconnected user", currentUser);
-
-      if (!users.length) {
-        clearInterval(updateDogsIntervalId);
       }
-    });
+    );
     socket.on(
       "chat",
       (message) => {
