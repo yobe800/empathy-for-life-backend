@@ -5,13 +5,12 @@ const { SCHEMA_TIMESTAMPS_OPTION } = require("../constants/constants");
 const DogSchema = new mongoose.Schema({
   name: {
     type: String,
-    validate: [validator.isEmpty, "should input dog's name"],
     minLength: [1, "too short dog's name"],
     required: [true, "dog's name is required"],
   },
   gender: {
     type: String,
-    enum: ["male, female"],
+    enum: ["male", "female"],
     required: [true, "gender is required"],
   },
   breed: {
@@ -49,12 +48,12 @@ const DogSchema = new mongoose.Schema({
   },
   adoption_status: {
     type: String,
-    enum: ["ready", "progress", "completed"],
+    enum: ["ready", "wait", "completed"],
     default: "ready",
   },
   character: {
     type: String,
-    enum: ["yellowShiba", "darkShiba", "grayShiba"],
+    enum: ["brownShiba", "darkShiba", "grayShiba"],
     default: "yellowShiba",
   },
   description: {

@@ -9,17 +9,20 @@ const app = express();
 
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: false, limit: "10mb" }));
 app.use(cookieParser());
 
 const userRouter = require("./routes/user");
+const dogRouter = require("./routes/dog");
 const adminRouter = require("./routes/admin");
 
 app.use("/user", userRouter);
+app.use("/dog", dogRouter);
 app.use("/admin", adminRouter);
 
 app.use((err, req, res, next) => {
+  console.log(err);
   logErrorInDevelopment(err.error);
   res.status(err.status || 500);
 
