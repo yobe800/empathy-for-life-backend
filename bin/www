@@ -8,6 +8,7 @@ require("../db/db");
 const app = require("../app");
 const debug = require("debug")("backend:server");
 const http = require("http");
+const { connectSocket } = require("../socket/socket");
 
 /**
  * Get port from environment and store in Express.
@@ -21,7 +22,7 @@ app.set("port", port);
  */
 
 const server = http.createServer(app);
-
+connectSocket(server);
 /**
  * Listen on provided port, on all network interfaces.
  */
