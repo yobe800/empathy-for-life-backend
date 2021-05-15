@@ -131,7 +131,6 @@ const updateDog = async (req, res, next) => {
     if (photo.split("data:")[1]) {
       const { photo: { key } } = await Dog.findById(id, "photo", { lean: true });
       const result = await deletePhotoFromS3(key);
-      console.log(key, result);
 
       const { photoUrl, photoKey } = await uploadPhotoToS3(name, "dog-profile", photo);
       updateDog.photo = { url: photoUrl, key: photoKey };
@@ -139,7 +138,7 @@ const updateDog = async (req, res, next) => {
 
     await Dog.updateOne({ _id: id }, updateDog);
 
-    res.json({ message: "ok", result: null });
+    return res.json({ message: "ok", result: null });
   } catch (err) {
     next(
       createError(500, "failed update a dog", { error: err }),
@@ -147,9 +146,26 @@ const updateDog = async (req, res, next) => {
   }
 };
 
+const deleteDog = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { photo: { key } } = await Dog.findById(id, "photo", { lean: true });
+    await deletePhotoFromS3(key);
+    const result = await Dog.findByIdAndDelete(id);
+
+    return res.json({ message: "ok", result: null });
+  } catch (err) {
+    next(
+      createError(500, "failed delete a dog", { error: err }),
+    );
+  }
+
+};
+
 module.exports = {
   getDogs,
   addDog,
   getDog,
   updateDog,
+  deleteDog,
 };

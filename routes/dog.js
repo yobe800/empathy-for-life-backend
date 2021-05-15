@@ -4,12 +4,14 @@ const {
   getDog,
   getDogs,
   addDog,
-  updateDog
+  updateDog,
+  deleteDog,
 } = require("./controllers/dog.controller");
 
 router.get("/", getDogs);
 router.post("/new", addDog);
 router.get("/:id", getDog);
 router.put("/:id", updateDog);
+router.delete("/:id", deleteDog);
 
 module.exports = router;
