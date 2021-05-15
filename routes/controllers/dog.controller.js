@@ -1,16 +1,34 @@
 const createError = require("http-errors");
 
 const Dog = require("../../models/Dog");
-const imageUploadToS3 = require("../../utils/imageUploadToS3");
+const { uploadPhotoToS3, deletePhotoFromS3 } = require("../../aws/s3");
 
 const getDogs = async (req, res, next) => {
   try {
-    console.log(req.query);
-    const { projection } = req.query;
+    const { search, next } = req.query;
+    const regExpSearch = new RegExp(search);
+    const nextNumber = Number(next) || 0;
+    let dogs;
 
-    const dogs = await Dog.find({}, projection).lean();
+    if (search) {
+      dogs = await Dog.find()
+      .or([ { name: regExpSearch }, { breed: regExpSearch }])
+      .lean();
+      dogs.sort((a, b) => b.name > a.name ? -1 : 1);
+    } else {
+      dogs = await Dog.aggregate([
+        { $skip: nextNumber },
+        { $limit: 6 },
+      ]);
+    }
 
-    return res.json({ message: "ok", result: dogs });
+    return res.json({
+      message: "ok",
+      result: {
+        dogs,
+        next: nextNumber + dogs.length,
+      },
+    });
   } catch (err) {
     next(
       createError(500, "failed get dogs", { error: err }),
@@ -37,7 +55,7 @@ const addDog = async (req, res, next) => {
       photo,
     } = req.body;
 
-    const location = await imageUploadToS3(name, "dog-profile", photo);
+    const { photoUrl, photoKey } = await uploadPhotoToS3(name, "dog-profile", photo);
     const newDog = {
       name,
       gender,
@@ -50,7 +68,10 @@ const addDog = async (req, res, next) => {
       adoption_status,
       character,
       description,
-      photo_url: location,
+      photo: {
+        key: photoKey,
+        url: photoUrl,
+      },
     };
     await Dog.create(newDog);
 
@@ -65,7 +86,6 @@ const addDog = async (req, res, next) => {
 const getDog = async (req, res, next) => {
   try {
     const { id } = req.params;
-
     const dog = await Dog.findById(id).lean();
 
     return res.json({ message: "ok", result: dog });
@@ -74,11 +94,62 @@ const getDog = async (req, res, next) => {
       createError(500, "failed get a dog", { error: err }),
     );
   }
+};
 
+const updateDog = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const {
+      name,
+      gender,
+      breed,
+      age,
+      weight,
+      heartWorm: heart_worm,
+      neutering,
+      entrancedAt: entranced_at,
+      adoptionStatus: adoption_status,
+      dogCharacter: character,
+      description,
+      photo,
+    } = req.body;
+
+    const updateDog = {
+      name,
+      gender,
+      breed,
+      age,
+      weight,
+      heart_worm,
+      neutering,
+      entranced_at,
+      adoption_status,
+      character,
+      description,
+    };
+
+    if (photo.split("data:")[1]) {
+      const { photo: { key } } = await Dog.findById(id, "photo", { lean: true });
+      const result = await deletePhotoFromS3(key);
+      console.log(key, result);
+
+      const { photoUrl, photoKey } = await uploadPhotoToS3(name, "dog-profile", photo);
+      updateDog.photo = { url: photoUrl, key: photoKey };
+    }
+
+    await Dog.updateOne({ _id: id }, updateDog);
+
+    res.json({ message: "ok", result: null });
+  } catch (err) {
+    next(
+      createError(500, "failed update a dog", { error: err }),
+    );
+  }
 };
 
 module.exports = {
   getDogs,
   addDog,
   getDog,
+  updateDog,
 };

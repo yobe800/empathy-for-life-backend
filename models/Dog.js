@@ -29,10 +29,16 @@ const DogSchema = new mongoose.Schema({
     max: 1000,
     required: [true, "weight is required"],
   },
-  photo_url: {
-    type: String,
-    validate: [validator.isURL, "input right URL string"],
-    required: [true, "photo is required"],
+  photo: {
+    key: {
+      type: String,
+      required: [true, "photo key is required"],
+    },
+    url: {
+      type: String,
+      validate: [validator.isURL, "input right URL string"],
+      required: [true, "photo is required"],
+    }
   },
   heart_worm: {
     type: Boolean,
@@ -54,12 +60,17 @@ const DogSchema = new mongoose.Schema({
   character: {
     type: String,
     enum: ["brownShiba", "darkShiba", "grayShiba"],
-    default: "yellowShiba",
+    default: "brownShiba",
   },
   description: {
     type: String,
     maxLength: 10000,
   },
 }, SCHEMA_TIMESTAMPS_OPTION);
+
+DogSchema.index({
+  name: "text",
+  breed: "text",
+});
 
 module.exports = mongoose.model("Dog", DogSchema);
