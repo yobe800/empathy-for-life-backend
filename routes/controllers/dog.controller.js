@@ -12,7 +12,7 @@ const getDogs = async (req, res, next) => {
 
     if (search) {
       dogs = await Dog.find()
-      .or([ { name: regExpSearch }, { breed: regExpSearch }])
+      .or([{ name: regExpSearch }, { breed: regExpSearch }])
       .lean();
       dogs.sort((a, b) => b.name > a.name ? -1 : 1);
     } else {
@@ -34,8 +34,6 @@ const getDogs = async (req, res, next) => {
       createError(500, "failed get dogs", { error: err }),
     );
   }
-
-
 };
 
 const addDog = async (req, res, next) => {
@@ -55,7 +53,7 @@ const addDog = async (req, res, next) => {
       photo,
     } = req.body;
 
-    const { photoUrl, photoKey } = await uploadPhotoToS3(name, "dog-profile", photo);
+    const { photoUrl, photoKey } = await uploadPhotoToS3(name, "dogs/profile", photo);
     const newDog = {
       name,
       gender,
@@ -130,9 +128,9 @@ const updateDog = async (req, res, next) => {
 
     if (photo.split("data:")[1]) {
       const { photo: { key } } = await Dog.findById(id, "photo", { lean: true });
-      const result = await deletePhotoFromS3(key);
+      await deletePhotoFromS3(key);
 
-      const { photoUrl, photoKey } = await uploadPhotoToS3(name, "dog-profile", photo);
+      const { photoUrl, photoKey } = await uploadPhotoToS3(name, "dogs/profile", photo);
       updateDog.photo = { url: photoUrl, key: photoKey };
     }
 
@@ -159,7 +157,18 @@ const deleteDog = async (req, res, next) => {
       createError(500, "failed delete a dog", { error: err }),
     );
   }
+};
 
+const getDogNames = async (req, res, next) => {
+  try {
+    const dogNames = await Dog.find({}, "name").lean();
+
+    return res.json({ message: "ok", result: dogNames });
+  } catch (err) {
+    next(
+      createError(500, "failed get dog names", { error: err }),
+    );
+  }
 };
 
 module.exports = {
@@ -168,4 +177,5 @@ module.exports = {
   getDog,
   updateDog,
   deleteDog,
+  getDogNames,
 };

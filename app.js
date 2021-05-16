@@ -16,10 +16,12 @@ app.use(cookieParser());
 const userRouter = require("./routes/user");
 const dogRouter = require("./routes/dog");
 const adminRouter = require("./routes/admin");
+const postsRouter = require("./routes/posts");
 
 app.use("/user", userRouter);
 app.use("/dog", dogRouter);
 app.use("/admin", adminRouter);
+app.use("/posts", postsRouter);
 
 app.use((err, req, res, next) => {
   console.log(err);

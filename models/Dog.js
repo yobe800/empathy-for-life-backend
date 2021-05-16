@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+
 const { SCHEMA_TIMESTAMPS_OPTION } = require("../constants/constants");
 
 const DogSchema = new mongoose.Schema({

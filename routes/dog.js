@@ -6,11 +6,13 @@ const {
   addDog,
   updateDog,
   deleteDog,
+  getDogNames,
 } = require("./controllers/dog.controller");
 
+router.get("/names", getDogNames);
 router.get("/", getDogs);
-router.post("/new", addDog);
 router.get("/:id", getDog);
+router.post("/new", addDog);
 router.put("/:id", updateDog);
 router.delete("/:id", deleteDog);
 
