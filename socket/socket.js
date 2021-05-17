@@ -2,7 +2,7 @@ const { Server } = require("socket.io");
 
 const { CANVAS_SIZES, UPDATE_DOGS_TIME } = require("../constants/constants");
 const getRandomInteger = require("../utils/getRandomInteger");
-let io, updateDogsIntervalId, dogs, dogUpdatedTimestamp;
+let broadcaster, io, updateDogsIntervalId, dogs, dogUpdatedTimestamp;
 let users = [];
 
 const generateDogsForDrawing = require("../utils/generateDogsForDrawing");
@@ -95,6 +95,54 @@ const handleSocket = () => {
           dogs = generateDogsForDrawing(10);
           dogUpdatedTimestamp = current;
         }
+      },
+    );
+    socket.on(
+      "start streaming",
+      (broadcasterId) => {
+        broadcaster = broadcasterId;
+        socket.emit(
+          "new viewers",
+          users.filter(({ id }) => socket.id !== id),
+        );
+      },
+    );
+    socket.on(
+      "register as viewer",
+      () => {
+        if (broadcaster) {
+          socket.to(broadcaster).emit(
+            "new viewers",
+            [{ id: socket.id }],
+          );
+        }
+      },
+    );
+    socket.on(
+      "offer",
+      (viewerId, event) => {
+        event.broadcaster = broadcaster;
+        socket.to(viewerId).emit(
+          "offer",
+          event.broadcaster,
+          event.sdp,
+        );
+      },
+    );
+    socket.on(
+      "answer",
+      (event) => {
+        socket.to(broadcaster).emit(
+          "answer",
+          socket.id,
+          event.sdp,
+        );
+      },
+    );
+    socket.on(
+      "candidate",
+      (id, event) => {
+        socket.to(id).emit("candidate", socket.id, event);
       },
     );
   });

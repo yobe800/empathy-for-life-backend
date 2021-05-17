@@ -7,7 +7,20 @@ const logErrorInDevelopment = require("./utils/logErrorInDevelopment");
 
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+const whilteList = [process.env.CLIENT_URL, "http://192.168.0.121"];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (whilteList.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowd By CORS"));
+    }
+  },
+  credentials: true,
+};
+app.use(cors(corsOptions));
+// app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(logger("dev"));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: false, limit: "10mb" }));
