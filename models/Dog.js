@@ -1,17 +1,17 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+
 const { SCHEMA_TIMESTAMPS_OPTION } = require("../constants/constants");
 
 const DogSchema = new mongoose.Schema({
   name: {
     type: String,
-    validate: [validator.isEmpty, "should input dog's name"],
     minLength: [1, "too short dog's name"],
     required: [true, "dog's name is required"],
   },
   gender: {
     type: String,
-    enum: ["male, female"],
+    enum: ["male", "female"],
     required: [true, "gender is required"],
   },
   breed: {
@@ -30,10 +30,16 @@ const DogSchema = new mongoose.Schema({
     max: 1000,
     required: [true, "weight is required"],
   },
-  photo_url: {
-    type: String,
-    validate: [validator.isURL, "input right URL string"],
-    required: [true, "photo is required"],
+  photo: {
+    key: {
+      type: String,
+      required: [true, "photo key is required"],
+    },
+    url: {
+      type: String,
+      validate: [validator.isURL, "input right URL string"],
+      required: [true, "photo is required"],
+    }
   },
   heart_worm: {
     type: Boolean,
@@ -49,18 +55,23 @@ const DogSchema = new mongoose.Schema({
   },
   adoption_status: {
     type: String,
-    enum: ["ready", "progress", "completed"],
+    enum: ["ready", "wait", "completed"],
     default: "ready",
   },
   character: {
     type: String,
-    enum: ["yellowShiba", "darkShiba", "grayShiba"],
-    default: "yellowShiba",
+    enum: ["brownShiba", "darkShiba", "grayShiba"],
+    default: "brownShiba",
   },
   description: {
     type: String,
     maxLength: 10000,
   },
 }, SCHEMA_TIMESTAMPS_OPTION);
+
+DogSchema.index({
+  name: "text",
+  breed: "text",
+});
 
 module.exports = mongoose.model("Dog", DogSchema);
