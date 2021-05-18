@@ -33,6 +33,15 @@ const handleSocket = () => {
           currentUser = user;
         });
         currentUser.disconnectedAt = Date.now();
+
+        if (broadcaster) {
+          if (broadcaster !== currentUser.id) {
+            socket.to(broadcaster).emit("left viewer", currentUser.id);
+          } else {
+            socket.broadcast.emit("close streaming", broadcaster);
+            broadcaster = null;
+          }
+        }
         socket.broadcast.emit("disconnected user", currentUser);
 
         if (!users.length) {
@@ -143,6 +152,13 @@ const handleSocket = () => {
       "candidate",
       (id, event) => {
         socket.to(id).emit("candidate", socket.id, event);
+      },
+    );
+    socket.on(
+      "stop streaming",
+      (broadcasterId) => {
+        broadcaster = null;
+        socket.broadcast.emit("close streaming", broadcasterId);
       },
     );
   });
