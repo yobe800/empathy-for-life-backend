@@ -8,12 +8,11 @@ let users = [];
 const generateDogsForDrawing = require("../utils/generateDogsForDrawing");
 
 const handleSocket = () => {
-  io.on("connection", (socket) => {
+  io.on("connection", async (socket) => {
     if (!users.length) {
-      dogs = generateDogsForDrawing(10);
+      dogs = await generateDogsForDrawing(10);
       dogUpdatedTimestamp = Date.now();
     }
-
     const { userName } = socket.handshake.auth;
     const user = { id: socket.id, name: userName, createdAt: Date.now() };
     io.to(socket.id).emit("current users", users);
@@ -78,11 +77,12 @@ const handleSocket = () => {
     socket.on(
       "update a dog for drawing",
       (dogId) => {
-        const findedDog = dogs.find((dog) => dog._id === dogId);
+        const findedDog = dogs.find((dog) => dog._id.toString() === dogId);
 
-        if (findedDog.isUpdating) {
+        if (!findedDog || findedDog.isUpdating) {
           return;
         }
+
         findedDog.isUpdating = true;
         setTimeout(() => {
           findedDog.targetCoordinates = {
@@ -95,14 +95,15 @@ const handleSocket = () => {
       },
     );
     socket.on(
-      "update all dog",
-      () => {
+      "update all dogs",
+      async () => {
         const current = Date.now();
         const shouldUpdate = dogUpdatedTimestamp + UPDATE_DOGS_TIME <= current
 
         if (shouldUpdate) {
-          dogs = generateDogsForDrawing(10);
+          dogs = await generateDogsForDrawing(10);
           dogUpdatedTimestamp = current;
+          io.emit("update all dogs", dogs);
         }
       },
     );

@@ -16,6 +16,10 @@ const addPost = async (req, res, next) => {
     } else {
       const { writer, dogIds: dogs, content, photo } = post;
       const { photoUrl, photoKey } = await uploadPhotoToS3("post", "dogs/post", photo);
+      if (dogs.some((value) => value === "all")) {
+        dogs.length = 0;
+      }
+
       const newPost = {
         writer,
         dogs,

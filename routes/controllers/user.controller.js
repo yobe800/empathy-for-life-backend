@@ -8,6 +8,7 @@ const verifyIdToken = require("../../utils/verifyIdToken");
 const getToken = require("../../utils/getToken");
 const generateIdToken = require("../../utils/generateIdToken");
 const getRandomUserCharactor = require("../../utils/getRandomUserCharactor");
+const createPayload = require("../../utils/createPayload");
 
 const getUser = async (req, res, next) => {
   const { empathyForLifeIdToken } = req.cookies;
@@ -91,5 +92,23 @@ const signInUser = async (req, res, next) => {
   }
 };
 
-exports.getUser = getUser;
-exports.signInUser = signInUser;
+const updateUser = async (req, res, next) => {
+  try {
+    const payload = createPayload();
+    const { id, access_time } = req.body;
+    const user = await User.findByIdAndUpdate(id, { access_time });
+    payload.message = "ok";
+
+    return res.json(payload);
+  } catch (err) {
+    next(
+      createError(500, "failed to update a user", { error: err }),
+    );
+  }
+};
+
+module.exports = {
+  getUser,
+  signInUser,
+  updateUser,
+};
