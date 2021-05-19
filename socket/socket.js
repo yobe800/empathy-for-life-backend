@@ -109,6 +109,10 @@ const handleSocket = () => {
     socket.on(
       "start streaming",
       (broadcasterId) => {
+        if (broadcaster) {
+          return;
+        }
+
         broadcaster = broadcasterId;
         socket.emit(
           "new viewers",
