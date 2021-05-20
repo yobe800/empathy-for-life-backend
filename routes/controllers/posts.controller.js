@@ -44,10 +44,16 @@ const addPost = async (req, res, next) => {
 
 const getPosts = async (req, res, next) => {
   try {
+    const { search } = req.query;
+    const regExpSearch = new RegExp(search);
+    const filter = search ? { content: regExpSearch } : {};
     const posts = await Post
-    .find()
-    .populate("writer", "user_name")
-    .lean();
+      .find(filter)
+      .sort({ created_at: -1 })
+      .populate("writer", "user_name")
+      .lean();
+    console.log(search, posts);
+
     const payload = createPayload("ok", posts);
 
     return res.json(payload);

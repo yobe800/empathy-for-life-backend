@@ -94,8 +94,8 @@ const signInUser = async (req, res, next) => {
 
 const updateUser = async (req, res, next) => {
   try {
-    const payload = createPayload();
     const { id, access_time } = req.body;
+    const payload = createPayload();
     const user = await User.findByIdAndUpdate(id, { access_time });
     payload.message = "ok";
 

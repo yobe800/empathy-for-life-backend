@@ -9,9 +9,9 @@ const UserSchema = new mongoose.Schema({
     type: String,
     lowercase: true,
     trim: true,
-    validate: [validator.isAlphanumeric, "it's invalid id. input only alphanumeric"],
-    minLength: [1, "too short length id"],
-    maxLength: [30, "too long length id"],
+    validate: [validator.isAlphanumeric, "it's invalid id {VALUE}. input only alphanumeric"],
+    minLength: [1, "too short length id {VALUE}"],
+    maxLength: [30, "too long length id {VALUE}"],
     index: true,
   },
   admin_password: {
@@ -19,14 +19,14 @@ const UserSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    validate: [validator.isEmail, "input a valid email"],
+    validate: [validator.isEmail, "it`s an invalid email {VALUE}"],
     required: [true, "email is required"],
     index: true,
   },
   uids: [
     {
       type: String,
-      validate: [validator.isAlphanumeric, "Invalid uid"],
+      validate: [validator.isAlphanumeric, "Invalid uid {VALUE}"],
     },
   ],
   user_name: {
