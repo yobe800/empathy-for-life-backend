@@ -16,6 +16,10 @@ const addPost = async (req, res, next) => {
     } else {
       const { writer, dogIds: dogs, content, photo } = post;
       const { photoUrl, photoKey } = await uploadPhotoToS3("post", "dogs/post", photo);
+      if (dogs.some((value) => value === "all")) {
+        dogs.length = 0;
+      }
+
       const newPost = {
         writer,
         dogs,
@@ -40,10 +44,15 @@ const addPost = async (req, res, next) => {
 
 const getPosts = async (req, res, next) => {
   try {
+    const { search } = req.query;
+    const regExpSearch = new RegExp(search);
+    const filter = search ? { content: regExpSearch } : {};
     const posts = await Post
-    .find()
-    .populate("writer", "user_name")
-    .lean();
+      .find(filter)
+      .sort({ created_at: -1 })
+      .populate("writer", "user_name")
+      .lean();
+
     const payload = createPayload("ok", posts);
 
     return res.json(payload);

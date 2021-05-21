@@ -9,7 +9,6 @@ const s3 = new AWS.S3();
 
 const uploadPhotoToS3 = async (fileKey = "", route = "", base64) => {
   const base64Data = new Buffer.from(base64.replace(/^data:image\/\w+;base64,/, ""), "base64");
-  console.log(base64Data);
   const type = base64.split(";")[0].split("/")[1];
 
   const params = {
