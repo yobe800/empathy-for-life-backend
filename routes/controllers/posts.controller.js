@@ -46,7 +46,6 @@ const getPosts = async (req, res, next) => {
   try {
     const { search, next } = req.query;
     const payload = createPayload("ok", { posts: [], next: null });
-    console.log(search, next);
 
     if (next === null) {
       return res.json(payload);
@@ -89,7 +88,7 @@ const getPost = async (req, res, next) => {
       payload.message = "ok";
       payload.result = post;
     }
-
+    
     return res.json(payload);
   } catch (err) {
     next(
@@ -141,6 +140,7 @@ const editPost = async (req, res, next) => {
 
 const deletePost = async (req, res, next) => {
   try {
+    console.log("헬로");
     const { id } = req.params;
     const payload = createPayload();
 
