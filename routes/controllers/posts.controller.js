@@ -140,7 +140,6 @@ const editPost = async (req, res, next) => {
 
 const deletePost = async (req, res, next) => {
   try {
-    console.log("헬로");
     const { id } = req.params;
     const payload = createPayload();
 
