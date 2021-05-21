@@ -23,6 +23,7 @@ const handleSocket = () => {
     socket.on(
       "disconnect",
       () => {
+        console.log(users);
         let currentUser;
         users = users.filter((user) => {
           if (socket.id !== user.id) {
