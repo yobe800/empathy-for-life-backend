@@ -2,33 +2,57 @@ const createError = require("http-errors");
 
 const Dog = require("../../models/Dog");
 const { uploadPhotoToS3, deletePhotoFromS3 } = require("../../aws/s3");
+const createPayload = require("../../utils/createPayload");
 
 const getDogs = async (req, res, next) => {
   try {
     const { search, next } = req.query;
+    const payload = createPayload();
+
+    if (next === null) {
+      payload.message = "ok";
+      payload.result = {
+        dogs: [],
+        next,
+      };
+
+      return res.json(payload);
+    }
+
     const regExpSearch = new RegExp(search);
-    const nextNumber = Number(next) || 0;
+    const pageNumber = Number(next) || 0;
+    const LIMIT_DOCUMENT = 10;
+    const sortFilter = { created_at: -1, name: -1 };
     let dogs;
 
     if (search) {
-      dogs = await Dog.find()
-      .or([{ name: regExpSearch }, { breed: regExpSearch }])
-      .lean();
-      dogs.sort((a, b) => b.name > a.name ? -1 : 1);
+      dogs = Dog.find()
+        .or([{ name: regExpSearch }, { breed: regExpSearch }]);
     } else {
-      dogs = await Dog.aggregate([
-        { $skip: nextNumber },
-        { $limit: 6 },
-      ]);
+      dogs = Dog.find();
     }
 
-    return res.json({
-      message: "ok",
-      result: {
-        dogs,
-        next: nextNumber + dogs.length,
-      },
-    });
+    const result = await dogs
+      .sort(sortFilter)
+      .skip(LIMIT_DOCUMENT * pageNumber)
+      .limit(LIMIT_DOCUMENT)
+      .lean();
+
+    let nextPage;
+
+    if (result.length === LIMIT_DOCUMENT) {
+      nextPage = pageNumber + 1;
+    } else {
+      nextPage = null;
+    }
+
+    payload.message = "ok";
+    payload.result = {
+      dogs: result,
+      next: nextPage,
+    };
+
+    return res.json(payload);
   } catch (err) {
     next(
       createError(500, "failed get dogs", { error: err }),
