@@ -15,10 +15,16 @@ const CANVAS_SIZES = {
   y: 920,
 };
 
+const whiteList = [
+  process.env.CLIENT_URL_DEV,
+  process.env.CLIENT_URL,
+];
+
 module.exports = {
   SCHEMA_TIMESTAMPS_OPTION,
   USER_CHARACTERS,
   ID_TOKEN_COOKIE_MAX_AGE,
   UPDATE_DOGS_TIME,
   CANVAS_SIZES,
+  whiteList,
 };

@@ -15,12 +15,12 @@ const getUser = async (req, res, next) => {
   const payload = { message: "", result: null };
 
   if (!empathyForLifeIdToken) {
-    payload.message = "failed";
+    payload.message = "failed to get a user";
     return res.json(payload);
   }
 
   try {
-    const userId = verifyIdToken(empathyForLifeIdToken);
+    const { userId } = res.locals;
     const projection = "user_name is_administrator character access_time";
     const user = await User.findById(userId, projection, { lean: true });
 

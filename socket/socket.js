@@ -169,12 +169,18 @@ const handleSocket = () => {
   });
 };
 
+const { whiteList } = require("../constants/constants");
+
 const connectSocket = (server) => {
   io = new Server(
     server,
     {
-      cors: {
-        origin: process.env.CLIENT_URL,
+      cors: (message, callback) => {
+        if (whiteList.indexOf(message.headers.origin) !== -1) {
+          return callback(null, message);
+        }
+
+        return callback(new Error("invalid origin"));
       },
     },
   );

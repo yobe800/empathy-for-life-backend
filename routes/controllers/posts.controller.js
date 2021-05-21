@@ -52,7 +52,6 @@ const getPosts = async (req, res, next) => {
       .sort({ created_at: -1 })
       .populate("writer", "user_name")
       .lean();
-    console.log(search, posts);
 
     const payload = createPayload("ok", posts);
 

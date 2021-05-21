@@ -6,8 +6,11 @@ const {
   updateUser,
 } = require("./controllers/user.controller");
 
-router.get("/", getUser);
+const { authenticateUser } = require("../middlewares/authenticateUser");
+
 router.post("/sign-in", signInUser);
+router.use(authenticateUser);
 router.put("/", updateUser);
+router.get("/", getUser);
 
 module.exports = router;
