@@ -113,7 +113,6 @@ const handleSocket = () => {
         if (broadcaster) {
           return;
         }
-
         broadcaster = broadcasterId;
         socket.emit(
           "new viewers",
