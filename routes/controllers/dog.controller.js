@@ -21,7 +21,7 @@ const getDogs = async (req, res, next) => {
 
     const regExpSearch = new RegExp(search);
     const pageNumber = Number(next) || 0;
-    const limitDocument = 10;
+    const LIMIT_DOCUMENT = 10;
     const sortFilter = { created_at: -1, name: -1 };
     let dogs;
 
@@ -34,13 +34,13 @@ const getDogs = async (req, res, next) => {
 
     const result = await dogs
       .sort(sortFilter)
-      .skip(limitDocument * pageNumber)
-      .limit(limitDocument)
+      .skip(LIMIT_DOCUMENT * pageNumber)
+      .limit(LIMIT_DOCUMENT)
       .lean();
 
     let nextPage;
 
-    if (result.length === limitDocument) {
+    if (result.length === LIMIT_DOCUMENT) {
       nextPage = pageNumber + 1;
     } else {
       nextPage = null;

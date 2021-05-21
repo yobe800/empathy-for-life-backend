@@ -44,16 +44,31 @@ const addPost = async (req, res, next) => {
 
 const getPosts = async (req, res, next) => {
   try {
-    const { search } = req.query;
+    const { search, next } = req.query;
+    const payload = createPayload("ok", { posts: [], next: null });
+    console.log(search, next);
+
+    if (next === null) {
+      return res.json(payload);
+    }
+    const pageNumber = Number(next) || 0;
+    const LIMIT_DOCUMENT = 5;
+
     const regExpSearch = new RegExp(search);
     const filter = search ? { content: regExpSearch } : {};
     const posts = await Post
       .find(filter)
       .sort({ created_at: -1 })
+      .skip(LIMIT_DOCUMENT * pageNumber)
+      .limit(LIMIT_DOCUMENT)
       .populate("writer", "user_name")
       .lean();
 
-    const payload = createPayload("ok", posts);
+    payload.result.posts = posts;
+
+    if (posts.length === LIMIT_DOCUMENT) {
+      payload.result.next = pageNumber + 1;
+    }
 
     return res.json(payload);
   } catch (err) {
