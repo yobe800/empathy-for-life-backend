@@ -10,6 +10,7 @@ const { authenticateUser } = require("./middlewares/authenticateUser");
 
 const app = express();
 
+app.use(express.limit("50MB"));
 app.use(cors(corsOptionsDelegate));
 app.use(logger("dev"));
 app.use(express.json({ limit: "50mb" }));
