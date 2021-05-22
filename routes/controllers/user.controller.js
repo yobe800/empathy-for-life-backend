@@ -4,45 +4,10 @@ const User = require("../../models/User");
 
 const { authenticateUser } = require("../../auth/firebase");
 const { ID_TOKEN_COOKIE_MAX_AGE } = require("../../constants/constants");
-const verifyIdToken = require("../../utils/verifyIdToken");
 const getToken = require("../../utils/getToken");
 const generateIdToken = require("../../utils/generateIdToken");
 const getRandomUserCharactor = require("../../utils/getRandomUserCharactor");
 const createPayload = require("../../utils/createPayload");
-
-const getUser = async (req, res, next) => {
-  const { empathyForLifeIdToken } = req.cookies;
-  const payload = { message: "", result: null };
-
-  if (!empathyForLifeIdToken) {
-    payload.message = "failed to get a user";
-    return res.json(payload);
-  }
-
-  try {
-    const { userId } = res.locals;
-    const projection = "user_name is_administrator character access_time";
-    const user = await User.findById(userId, projection, { lean: true });
-
-    payload.message = "ok";
-    payload.result = user;
-
-    const idToken = generateIdToken(
-      { id: payload.result._id },
-    );
-    res.cookie(
-      "empathyForLifeIdToken",
-      idToken,
-      { maxAge: ID_TOKEN_COOKIE_MAX_AGE },
-    );
-
-    return res.json(payload);
-  } catch (err) {
-    next(
-      createError(500, "failed to get user", { error: err }),
-    );
-  }
-};
 
 const signInUser = async (req, res, next) => {
   const payload = { message: "", result: null };
@@ -92,6 +57,53 @@ const signInUser = async (req, res, next) => {
   }
 };
 
+const signOutUser = (req, res, next) => {
+  try {
+    const payload = createPayload("ok");
+    res.clearCookie("empathyForLifeIdToken");
+
+    return res.json(payload);
+  } catch (err) {
+    next(
+      createError(500, "failed to destroy cookie", { error: err}),
+    );
+  }
+};
+
+const getUser = async (req, res, next) => {
+  const { empathyForLifeIdToken } = req.cookies;
+  const payload = { message: "", result: null };
+
+  if (!empathyForLifeIdToken) {
+    payload.message = "failed to get a user";
+    return res.json(payload);
+  }
+
+  try {
+    const { userId } = res.locals;
+    const projection = "user_name is_administrator character access_time";
+    const user = await User.findById(userId, projection, { lean: true });
+
+    payload.message = "ok";
+    payload.result = user;
+
+    const idToken = generateIdToken(
+      { id: payload.result._id },
+    );
+    res.cookie(
+      "empathyForLifeIdToken",
+      idToken,
+      { maxAge: ID_TOKEN_COOKIE_MAX_AGE },
+    );
+
+    return res.json(payload);
+  } catch (err) {
+    next(
+      createError(500, "failed to get user", { error: err }),
+    );
+  }
+};
+
 const updateUser = async (req, res, next) => {
   try {
     const { id, access_time } = req.body;
@@ -108,7 +120,8 @@ const updateUser = async (req, res, next) => {
 };
 
 module.exports = {
-  getUser,
   signInUser,
+  signOutUser,
+  getUser,
   updateUser,
 };
